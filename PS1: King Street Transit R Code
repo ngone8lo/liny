@@ -1,0 +1,83 @@
+#The King Street Transit Pilot did not cause major car travel delays on Yonge Street
+#import package opendatatoronto
+library(opendatatoronto)
+#importing tidyverse
+library(tidyverse)
+#importing kableExtra to style table
+library(kableExtra)
+#importing stringr
+library(stringr)
+
+king_pilot_summary_package<- bluetooth_packages %>%
+  filter(title == "King St. Transit Pilot - Bluetooth Travel Time Summary") # Only keep the row(s) where the title is "King St. Transit Pilot - Bluetooth Travel Time Summary"
+king_pilot_summary_package
+
+#filtering to get the resources we are interested in
+king_bluetooth_travel_summary <- king_pilot_summary_package %>% # Start with the package 
+  list_package_resources() %>% # list the resources in the package
+  filter(name == "bluetooth-travel-time-summary") %>% # Only keep the resource we want 
+  get_resource()
+  
+#Cleaning the dataset using Janitor
+data <- janitor::clean_names(king_bluetooth_travel_summary) 
+# dataset overview
+data
+
+#We are interested in the average delay time compared to the average baseline travel time on for the different line on Yonge Street.
+data_yonge <- data %>% 
+  # Filter to only have Yonge Street
+  filter(street == "Yonge")
+  
+#Concactenating the "from_intersection" and "to_intersection" to form direction names
+data_yonge$line=paste(data_yonge$from_intersection,"-to-", data_yonge$to_intersection)
+
+#shortening the time period names
+data_yonge$time_period <- str_replace(data_yonge$time_period, " \\(.*\\)", "")
+
+#rearranging the levels of time_period to have them in the order we want them to be
+data_yonge$time_period<-factor(data_yonge$time_period, levels=c("AM Peak", "Midday", "PM Peak", "Morning", "Afternoon", "Evening"))
+
+#calculate avarage delay in minutes (compared to baseline time)
+data_yonge$average_delay = data_yonge$average_travel_time - data_yonge$baseline_travel_time
+
+summary_stats<-matrix(c(summary(data_yonge$baseline_travel_time), summary(data_yonge$average_travel_time), summary(data_yonge$average_delay)),ncol=6,byrow=TRUE)
+colnames(summary_stats)<-c("Minimum","1st Quartile", "Median", "Mean", "3rd Quartile", "Maximum")
+rownames(summary_stats)<-c("Baseline Travel Time","Average Travel Time", "Average Travel Delay")
+summary_stats=round(summary_stats, 2)
+
+
+kable(summary_stats, caption = "Summary Statistics of Car Travel Time (minutes) on Yonge Street", "latex", booktabs = T, linesep ="") %>%
+  kable_styling(font_size = 10, latex_options = "hold_position")
+  
+ 
+#graph
+ggplot(data = data_yonge, mapping = aes(x = time_period, y = average_delay,color=line)) + 
+  geom_boxplot()+    #Use boxplots
+  facet_grid(.~day_type, scales="free_x")+ #Separate by day type
+  theme_minimal() + # Make the theme neater
+  theme(axis.text.x = element_text(size=8, angle = 120, hjust = 1), #Style x-axis
+        plot.title =element_text(size = 12))+ #Style title
+  labs(title= "Distribution of Average Car Travel Delay on Yonge Street during the Pilot",
+       x="Time Period", y="Average Travel Delay (minutes)", color="Direction") #Set labels
+```
+
+```{r saving_graph, include=FALSE}
+# Save the graph
+ggsave("v4.pdf", width = 25, height = 20, units = "cm")
+
+# References
+Transportation Services, City of Toronto. (2018, Dec 31). “King St. Transit Pilot - Bluetooth Travel Time Summary”. Retrieved from https://open.toronto.ca/dataset/king-st-transit-pilot-bluetooth-travel-time-summary/
+
+Doherty, P. (2018, Oct 10). “Overview of the King Street Transit Pilot with the City of Toronto’s David Kuperman”. Retrieved from https://uttri.utoronto.ca/news/overview-of-the-king-street-transit-pilot/
+
+Wickham et al., (2019). Welcome to the tidyverse. Journal of Open Source Software, 4(43), 1686, https://doi.org/10.21105/joss.01686
+
+Sharla Gelfand (2019). opendatatoronto: Access the City of Toronto Open Data Portal. R package version 0.1.1.
+https://CRAN.R-project.org/package=opendatatoronto
+
+Hao Zhu (2019). kableExtra: Construct Complex Table with 'kable' and Pipe Syntax. R package version 1.1.0.
+https://CRAN.R-project.org/package=kableExtra
+
+Hadley Wickham (2019). stringr: Simple, Consistent Wrappers for Common String Operations. R package version 1.4.0.
+https://CRAN.R-project.org/package=stringr
+
