@@ -1,16 +1,83 @@
-#Merging MCI and Shelter by Date and Neighbourhood
+# The dataset Shelter_Final.xlsx is available @ https://github.com/ngone8lo/liny. This file is a cleaned version of
+#the original file daily-shelter-occupancy-2017-csv which have have pre-processed using excel.
+
+#Aggregating and Merging Shelter Occupancy and Capacity by Week and Neighbourhood
+library(readxl)
+library(writexl)
+daily_shelter<-read_excel("Shelter_Final.xlsx")
+Table1<-aggregate(daily_shelter$OCCUPANCY, by=list(daily_shelter$WEEK,daily_shelter$NEIGHBOURHOOD,daily_shelter$NEIGHBOURHOOD_ID),FUN = sum)
+Table2<-aggregate(daily_shelter$CAPACITY, by=list(daily_shelter$WEEK,daily_shelter$NEIGHBOURHOOD,daily_shelter$NEIGHBOURHOOD_ID),FUN = sum)
+Table3<-merge(Table1,Table2,by=c("Group.1","Group.2","Group.3","Group.3"),all=TRUE)
+write_xlsx(Table3,"Aggregate_Shelter.xlsx")
+
+Table4<-aggregate(daily_shelter, by=list(daily_shelter$WEEK,daily_shelter$NEIGHBOURHOOD,daily_shelter$SHELTER_NAME),FUN =length)
+write_xlsx(Table4,"Shelter_Count.xlsx")
+
+
+
+library(readxl)
+library(writexl)
+MCI<-read_excel("MCI_Assault.xlsx")
+Table1<-aggregate(MCI$ASSAULT, by=list(MCI$WEEK,MCI$NEIGHBOURHOOD_ID,MCI$NEIGHBOURHOOD),FUN = sum)
+write_xlsx(Table1,"Aggreagate_MCI_Assault.xlsx")
+
+
+MCI<-read_excel("MCI_breakenter.xlsx")
+Table2<-aggregate(MCI$BREAKANDENTER, by=list(MCI$WEEK,MCI$NEIGHBOURHOOD_ID,MCI$NEIGHBOURHOOD),FUN = sum)
+write_xlsx(Table2,"Aggreagate_MCI_breakenter.xlsx")
+
+MCI<-read_excel("MCI_autotheft.xlsx")
+Table3<-aggregate(MCI$AUTOTHEFT, by=list(MCI$WEEK,MCI$NEIGHBOURHOOD_ID,MCI$NEIGHBOURHOOD),FUN = sum)
+write_xlsx(Table3,"Aggreagate_MCI_autotheft.xlsx")
+
+
+MCI<-read_excel("MCI_robbery.xlsx")
+Table4<-aggregate(MCI$ROBBERY, by=list(MCI$WEEK,MCI$NEIGHBOURHOOD_ID,MCI$NEIGHBOURHOOD),FUN = sum)
+write_xlsx(Table4,"Aggreagate_MCI_robbery.xlsx")
+
+MCI<-read_excel("MCI_theftover.xlsx")
+Table5<-aggregate(MCI$THEFTOVER, by=list(MCI$WEEK,MCI$NEIGHBOURHOOD_ID,MCI$NEIGHBOURHOOD),FUN = sum)
+write_xlsx(Table5,"Aggreagate_MCI_theftover.xlsx")
+
+MCI<-read_excel("MCI_total.xlsx")
+Table6<-aggregate(MCI$TOTAL, by=list(MCI$WEEK,MCI$NEIGHBOURHOOD_ID,MCI$NEIGHBOURHOOD),FUN = sum)
+write_xlsx(Table6,"Aggreagate_MCI_total.xlsx")
+
+
+#Merging the sub_datasets
+table1<-read_excel("Aggreagate_MCI_Assault.xlsx")
+table2<-read_excel("Aggreagate_MCI_breakenter.xlsx")
+Table<-merge(table1,table2,by=c("WEEK","NEIGHBOURHOOD_ID","NEIGHBOURHOOD"), all=TRUE)
+
+table3<-read_excel("Aggreagate_MCI_autotheft.xlsx")
+Tablebis<-merge(Table,table3,by=c("WEEK","NEIGHBOURHOOD_ID","NEIGHBOURHOOD"), all=TRUE)
+
+table4<-read_excel("Aggreagate_MCI_robbery.xlsx")
+Tableter<-merge(Tablebis,table4,by=c("WEEK","NEIGHBOURHOOD_ID","NEIGHBOURHOOD"), all=TRUE)
+
+table5<-read_excel("Aggreagate_MCI_theftover.xlsx")
+Tablequart<-merge(Tableter,table5,by=c("WEEK","NEIGHBOURHOOD_ID","NEIGHBOURHOOD"), all=TRUE)
+
+table6<-read_excel("Aggreagate_MCI_total.xlsx")
+TableFinal<-merge(Tablequart,table6,by=c("WEEK","NEIGHBOURHOOD_ID","NEIGHBOURHOOD"), all=TRUE)
+write_xlsx(TableFinal,"Aggregate_MCI.xlsx")
+
+
+
+
+#Merging MCI and Shelter by Week and Neighbourhood
 library(readxl)
 library(writexl)
 
-table1<-read_excel("Aggregate_Shelter_Final.xlsx")
-table2<-read_excel("Aggregate_MCI_Final.xlsx")
-Table<-merge(table1,table2,by=c("DATE","NEIGHBOURHOOD","NEIGHBOURHOOD_ID"),all.x=TRUE)
+table1<-read_excel("Aggregate_Shelter.xlsx")
+table2<-read_excel("Aggregate_MCI.xlsx")
+Table<-merge(table1,table2,by=c("WEEK","NEIGHBOURHOOD","NEIGHBOURHOOD_ID"),all.x=TRUE)
 write_xlsx(Table,"Aggregate_Dataset_Mid_BIS.xlsx")
 
 
 table3<-read_excel("Neighborhood_Cleaned_Final.xlsx")
 Table1<-merge(Table,table3,by=c("NEIGHBOURHOOD","NEIGHBOURHOOD_ID"),all.x=TRUE)
-write_xlsx(Table1,"Aggregate_Dataset_Final_BIS.xlsx")
+write_xlsx(Table1,"Aggregate_Dataset_Final.xlsx")
 
 
 
@@ -18,10 +85,13 @@ write_xlsx(Table1,"Aggregate_Dataset_Final_BIS.xlsx")
 
 
 
-#Aggregating and Merging by Date and Neighbourhood
+
+----------------------------------------------------------------------------------------------------
+
+#Aggregating and Merging Shelter Occupancy and Capacity by Date and Neighbourhood
 library(readxl)
 library(writexl)
-daily_shelter<-read_excel("daily-shelter-occupancy-2017_format_1.xlsx")
+daily_shelter<-read_excel("Shelter_Final.xlsx")
 Table1<-aggregate(daily_shelter, by=list(daily_shelter$OCCUPANCY_DATE,daily_shelter$NEIGHBOURHOOD,daily_shelter$NEIGHBOURHOOD_ID),FUN = mean)
 Table2<-aggregate(daily_shelter, by=list(daily_shelter$OCCUPANCY_DATE,daily_shelter$NEIGHBOURHOOD,daily_shelter$NEIGHBOURHOOD_ID),FUN = length)
 Table3<-aggregate(daily_shelter$OCCUPANCY, by=list(daily_shelter$OCCUPANCY_DATE,daily_shelter$NEIGHBOURHOOD,daily_shelter$NEIGHBOURHOOD_ID),FUN = sum)
